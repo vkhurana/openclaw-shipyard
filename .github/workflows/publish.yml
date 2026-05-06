@@ -1,6 +1,9 @@
 name: Publish image
 
 on:
+  schedule:
+    # 4:00 AM America/Los_Angeles during daylight saving time.
+    - cron: "0 11 * * *"
   push:
     branches:
       - main
