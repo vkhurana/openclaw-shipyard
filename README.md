@@ -31,7 +31,7 @@ docker build \
 If you are using the upstream OpenClaw `docker-compose.yml`, point `OPENCLAW_IMAGE` at this image:
 
 ```sh
-OPENCLAW_IMAGE=ghcr.io/YOUR_GITHUB_USER/openclaw-shipyard:latest docker compose up -d
+OPENCLAW_IMAGE=ghcr.io/vkhurana/openclaw-shipyard:latest docker compose up -d
 ```
 
 Or update your compose service directly:
@@ -39,7 +39,7 @@ Or update your compose service directly:
 ```yaml
 services:
   openclaw-gateway:
-    image: ghcr.io/YOUR_GITHUB_USER/openclaw-shipyard:latest
+    image: ghcr.io/vkhurana/openclaw-shipyard:latest
 ```
 
 The startup installer can be disabled with:
