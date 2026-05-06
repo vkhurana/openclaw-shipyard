@@ -48,6 +48,8 @@ jobs:
         with:
           context: .
           push: true
+          # Always check ghcr.io/openclaw/openclaw:latest on scheduled rebuilds.
+          pull: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
