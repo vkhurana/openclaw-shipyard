@@ -24,4 +24,5 @@ COPY --chmod=0755 docker-entrypoint.sh /usr/local/bin/openclaw-shipyard-entrypoi
 RUN chown -R node:node "${OPENCLAW_BAKED_PLUGIN_PACK_DIR}"
 
 USER node
+WORKDIR /app
 ENTRYPOINT ["/usr/local/bin/openclaw-shipyard-entrypoint"]

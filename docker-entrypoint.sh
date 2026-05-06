@@ -36,4 +36,5 @@ install_baked_plugins() {
 
 install_baked_plugins
 
+cd /app
 exec "$@"
