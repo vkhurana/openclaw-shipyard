@@ -16,9 +16,13 @@ install_baked_plugins() {
   mkdir -p "${OPENCLAW_CONFIG_DIR}" "${OPENCLAW_WORKSPACE_DIR}"
 
   checksum="$(
-    for package in "$@"; do
-      sha256sum "${package}"
-    done | sha256sum | awk '{ print $1 }'
+    {
+      # Include the install strategy so existing volumes are repaired when it changes.
+      printf '%s\n' 'npm-pack-v1'
+      for package in "$@"; do
+        sha256sum "${package}"
+      done
+    } | sha256sum | awk '{ print $1 }'
   )"
   marker="${OPENCLAW_CONFIG_DIR}/.shipyard-baked-plugins.sha256"
 
@@ -27,7 +31,8 @@ install_baked_plugins() {
   fi
 
   for package in "$@"; do
-    openclaw plugins install "${package}" --force
+    # Preserve npm provenance so official plugins receive trusted runtime APIs.
+    openclaw plugins install "npm-pack:${package}" --force
   done
 
   openclaw plugins registry --refresh
