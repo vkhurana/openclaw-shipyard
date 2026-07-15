@@ -9,7 +9,10 @@ ENV OPENCLAW_BAKED_PLUGIN_PACK_DIR=/opt/openclaw-plugin-packs
 ENV OPENCLAW_INSTALL_BAKED_PLUGINS=1
 
 USER root
-RUN install -d -m 0755 -o node -g node "${OPENCLAW_BAKED_PLUGIN_PACK_DIR}"
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ripgrep \
+    && rm -rf /var/lib/apt/lists/* \
+    && install -d -m 0755 -o node -g node "${OPENCLAW_BAKED_PLUGIN_PACK_DIR}"
 
 USER node
 WORKDIR ${OPENCLAW_BAKED_PLUGIN_PACK_DIR}
