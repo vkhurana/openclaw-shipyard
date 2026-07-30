@@ -72,4 +72,10 @@ After pushing this repo to GitHub, the included workflow publishes:
 - `ghcr.io/<owner>/<repo>:latest` from the default branch
 - `ghcr.io/<owner>/<repo>:<git-sha>` for each build
 
+The **Publish image** workflow can also be run manually with an explicit
+`openclaw_base_image` and `image_tag`. This publishes a recovery image without
+overwriting the normal `latest` tag. For example, use
+`ghcr.io/openclaw/openclaw:2026.7.1` and `2026.7.1` to publish
+`ghcr.io/<owner>/<repo>:2026.7.1` for a config written by OpenClaw `2026.7.1`.
+
 Use that published image in place of `ghcr.io/openclaw/openclaw`.
