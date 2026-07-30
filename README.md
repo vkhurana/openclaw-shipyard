@@ -1,6 +1,7 @@
 # openclaw-shipyard
 
-Custom OpenClaw image based on `ghcr.io/openclaw/openclaw` with the Discord and WhatsApp channel plugins baked in.
+Custom OpenClaw image based on `ghcr.io/openclaw/openclaw:latest`, with
+compatible Discord and WhatsApp channel plugins baked in.
 
 The image downloads the official plugin packages during `docker build`, stores them inside the image, and installs them into the mounted OpenClaw config directory on container startup. That matters because normal Docker deployments bind-mount `/home/node/.openclaw`, which would otherwise hide anything installed there at build time.
 
@@ -10,11 +11,18 @@ The image downloads the official plugin packages during `docker build`, stores t
 docker build -t openclaw-shipyard:latest .
 ```
 
-To pin the upstream OpenClaw image:
+The image follows the upstream `latest` runtime automatically. At build time,
+it reads the version in that image and downloads the newest official plugin
+release no newer than that runtime. This prevents npm's independently moving
+`latest` plugin tag from requiring a newer plugin API.
+
+If an existing config was written by a newer OpenClaw release than upstream
+`latest` (as with `2026.7.1` while `latest` is `2026.6.34`), build or deploy a
+temporary matching runtime tag until upstream catches up:
 
 ```sh
 docker build \
-  --build-arg OPENCLAW_BASE_IMAGE=ghcr.io/openclaw/openclaw:latest \
+  --build-arg OPENCLAW_BASE_IMAGE=ghcr.io/openclaw/openclaw:2026.7.1 \
   -t openclaw-shipyard:latest .
 ```
 
@@ -22,7 +30,7 @@ To change the baked plugins:
 
 ```sh
 docker build \
-  --build-arg 'OPENCLAW_PLUGIN_SPECS=@openclaw/discord @openclaw/whatsapp' \
+  --build-arg 'OPENCLAW_PLUGIN_NAMES=@openclaw/discord @openclaw/whatsapp' \
   -t openclaw-shipyard:latest .
 ```
 
@@ -32,6 +40,14 @@ If you are using the upstream OpenClaw `docker-compose.yml`, point `OPENCLAW_IMA
 
 ```sh
 OPENCLAW_IMAGE=ghcr.io/vkhurana/openclaw-shipyard:latest docker compose up -d
+```
+
+After this release is published, refresh an existing deployment so Docker does
+not keep running its previously pulled image:
+
+```sh
+docker compose pull openclaw-gateway
+docker compose up -d --force-recreate openclaw-gateway
 ```
 
 Or update your compose service directly:
