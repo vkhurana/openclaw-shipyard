@@ -1,9 +1,12 @@
 # syntax=docker/dockerfile:1.7
 
+# Follow the upstream runtime release. The plugin packages are selected below
+# based on the exact runtime version, rather than npm's independently moving
+# `latest` tag.
 ARG OPENCLAW_BASE_IMAGE=ghcr.io/openclaw/openclaw:latest
 FROM ${OPENCLAW_BASE_IMAGE}
 
-ARG OPENCLAW_PLUGIN_SPECS="@openclaw/discord @openclaw/whatsapp"
+ARG OPENCLAW_PLUGIN_NAMES="@openclaw/discord @openclaw/whatsapp"
 
 ENV OPENCLAW_BAKED_PLUGIN_PACK_DIR=/opt/openclaw-plugin-packs
 ENV OPENCLAW_INSTALL_BAKED_PLUGINS=1
@@ -18,8 +21,12 @@ USER node
 WORKDIR ${OPENCLAW_BAKED_PLUGIN_PACK_DIR}
 
 RUN set -eux; \
-    for plugin in ${OPENCLAW_PLUGIN_SPECS}; do \
-      npm pack "${plugin}"; \
+    runtime_version="$(openclaw --version | awk 'NR == 1 { print $NF }')"; \
+    for plugin in ${OPENCLAW_PLUGIN_NAMES}; do \
+      # Choose the newest plugin package no newer than the host. Official
+      # plugins declare the corresponding OpenClaw release as their minimum
+      # API version, so npm's unpinned `latest` is not safe here.
+      npm pack "${plugin}@<=${runtime_version}"; \
     done
 
 USER root
