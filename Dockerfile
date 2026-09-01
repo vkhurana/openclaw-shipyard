@@ -38,7 +38,13 @@ USER node
 WORKDIR ${OPENCLAW_BAKED_PLUGIN_PACK_DIR}
 
 RUN set -eux; \
-    runtime_version="$(openclaw --version | awk 'NR == 1 { print $NF }')"; \
+    # The CLI may append a Git revision in parentheses, e.g.
+    # "OpenClaw 2026.8.2 (0965053)". The release version is field two.
+    runtime_version="$(openclaw --version | awk 'NR == 1 { print $2 }')"; \
+    case "${runtime_version}" in \
+      [0-9]*.[0-9]*.[0-9]*) ;; \
+      *) echo "Could not determine an OpenClaw release version" >&2; exit 1 ;; \
+    esac; \
     for plugin in ${OPENCLAW_PLUGIN_NAMES}; do \
       # Choose the newest plugin package no newer than the host. Official
       # plugins declare the corresponding OpenClaw release as their minimum
