@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1.7
 
-# Follow the upstream runtime release. The plugin packages are selected below
-# based on the exact runtime version, rather than npm's independently moving
-# `latest` tag.
+# Follow the upstream runtime release. The plugin package versions are selected
+# below based on the exact runtime version, rather than npm's independently
+# moving `latest` tag.
 ARG OPENCLAW_BASE_IMAGE=ghcr.io/openclaw/openclaw:latest
 FROM ${OPENCLAW_BASE_IMAGE}
 
@@ -45,12 +45,26 @@ RUN set -eux; \
       [0-9]*.[0-9]*.[0-9]*) ;; \
       *) echo "Could not determine an OpenClaw release version" >&2; exit 1 ;; \
     esac; \
+    : > plugin-specs.txt; \
     for plugin in ${OPENCLAW_PLUGIN_NAMES}; do \
       # Choose the newest plugin package no newer than the host. Official
       # plugins declare the corresponding OpenClaw release as their minimum
-      # API version, so npm's unpinned `latest` is not safe here.
-      npm pack "${plugin}@<=${runtime_version}"; \
-    done
+      # API version, so npm's unpinned `latest` is not safe here. Record the
+      # resolved version for the entrypoint to install from the official npm
+      # registry, which OpenClaw recognizes as a trusted plugin source.
+      npm pack --json "${plugin}@<=${runtime_version}" | node -e '\
+        let output = ""; \
+        process.stdin.setEncoding("utf8"); \
+        process.stdin.on("data", (chunk) => { output += chunk; }); \
+        process.stdin.on("end", () => { \
+          const result = JSON.parse(output); \
+          const packageInfo = Array.isArray(result) ? result[0] : Object.values(result)[0]; \
+          const { name, version } = packageInfo; \
+          if (!name || !version) process.exit(1); \
+          console.log(name + "@" + version); \
+        });' >> plugin-specs.txt; \
+    done; \
+    rm -f ./*.tgz
 
 USER root
 COPY --chmod=0755 docker-entrypoint.sh /usr/local/bin/openclaw-shipyard-entrypoint

@@ -13,20 +13,16 @@ mkdir -p "$(dirname "${HIMALAYA_CONFIG}")"
 
 install_baked_plugins() {
   [ "${OPENCLAW_INSTALL_BAKED_PLUGINS}" != "0" ] || return 0
-  [ -d "${OPENCLAW_BAKED_PLUGIN_PACK_DIR}" ] || return 0
-
-  set -- "${OPENCLAW_BAKED_PLUGIN_PACK_DIR}"/*.tgz
-  [ -e "$1" ] || return 0
+  spec_file="${OPENCLAW_BAKED_PLUGIN_PACK_DIR}/plugin-specs.txt"
+  [ -s "${spec_file}" ] || return 0
 
   mkdir -p "${OPENCLAW_CONFIG_DIR}" "${OPENCLAW_WORKSPACE_DIR}"
 
   checksum="$(
     {
       # Include the install strategy so existing volumes are repaired when it changes.
-      printf '%s\n' 'npm-pack-v1'
-      for package in "$@"; do
-        sha256sum "${package}"
-      done
+      printf '%s\n' 'npm-registry-v1'
+      cat "${spec_file}"
     } | sha256sum | awk '{ print $1 }'
   )"
   marker="${OPENCLAW_CONFIG_DIR}/.shipyard-baked-plugins.sha256"
@@ -35,10 +31,12 @@ install_baked_plugins() {
     return 0
   fi
 
-  for package in "$@"; do
-    # Preserve npm provenance so official plugins receive trusted runtime APIs.
-    openclaw plugins install "npm-pack:${package}" --force
-  done
+  while IFS= read -r package_spec; do
+    [ -n "${package_spec}" ] || continue
+    # Install directly from npm: local archives are considered untrusted by
+    # recent OpenClaw versions and cannot access trusted runtime APIs.
+    openclaw plugins install "${package_spec}" --accept-capabilities --force --pin
+  done < "${spec_file}"
 
   openclaw plugins registry --refresh
   printf '%s\n' "${checksum}" > "${marker}"

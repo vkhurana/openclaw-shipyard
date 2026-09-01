@@ -7,7 +7,7 @@ It also includes the pinned [Himalaya](https://github.com/pimalaya/himalaya)
 IMAP/SMTP client (`2.0.0`). This makes email tooling available after every
 container recreate; its account configuration remains outside the image.
 
-The image downloads the official plugin packages during `docker build`, stores them inside the image, and installs them into the mounted OpenClaw config directory on container startup. That matters because normal Docker deployments bind-mount `/home/node/.openclaw`, which would otherwise hide anything installed there at build time.
+The image resolves exact, runtime-compatible official plugin versions during `docker build`, then installs them from npm into the mounted OpenClaw config directory on startup. This preserves the trusted npm provenance required by current OpenClaw releases; normal Docker deployments bind-mount `/home/node/.openclaw`, which would otherwise hide anything installed at build time. The first startup after a plugin version changes requires npm registry access.
 
 ## Build Locally
 
