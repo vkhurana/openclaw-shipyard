@@ -3,6 +3,10 @@
 Custom OpenClaw image based on `ghcr.io/openclaw/openclaw:latest`, with
 compatible Discord and WhatsApp channel plugins baked in.
 
+It also includes the pinned [Himalaya](https://github.com/pimalaya/himalaya)
+IMAP/SMTP client (`2.0.0`). This makes email tooling available after every
+container recreate; its account configuration remains outside the image.
+
 The image downloads the official plugin packages during `docker build`, stores them inside the image, and installs them into the mounted OpenClaw config directory on container startup. That matters because normal Docker deployments bind-mount `/home/node/.openclaw`, which would otherwise hide anything installed there at build time.
 
 ## Build Locally
@@ -33,6 +37,31 @@ docker build \
   --build-arg 'OPENCLAW_PLUGIN_NAMES=@openclaw/discord @openclaw/whatsapp' \
   -t openclaw-shipyard:latest .
 ```
+
+To update the bundled Himalaya release deliberately:
+
+```sh
+docker build \
+  --build-arg HIMALAYA_VERSION=2.0.0 \
+  -t openclaw-shipyard:latest .
+```
+
+## Email client persistence
+
+Himalaya is available as `himalaya` in the image. Its default configuration
+is `/home/node/.openclaw/himalaya/config.toml`, below the persisted OpenClaw
+config mount. To use a different location, set `HIMALAYA_CONFIG`:
+
+```yaml
+environment:
+  HIMALAYA_CONFIG: /home/node/.openclaw/himalaya/config.toml
+```
+
+Store the Gmail app password in a Docker secret or host-side secret command,
+never in this repository, the image, or a Compose environment value. The
+polling service itself should be a separate Compose service with its own
+durable state volume; that lets it restart independently of the OpenClaw
+gateway and prevents a gateway upgrade from losing message state.
 
 ## Use With Compose
 
