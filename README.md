@@ -4,8 +4,9 @@ Custom OpenClaw image based on `ghcr.io/openclaw/openclaw:latest`, with
 compatible Discord and WhatsApp channel plugins baked in.
 
 It also includes the pinned [Himalaya](https://github.com/pimalaya/himalaya)
-IMAP/SMTP client (`2.0.0`). This makes email tooling available after every
-container recreate; its account configuration remains outside the image.
+IMAP/SMTP client (`2.0.0`) and [GitHub CLI](https://cli.github.com/) (`gh`
+`2.99.0`). This makes email tooling and `gh` available after every container
+recreate; their account configuration remains outside the image.
 
 The image resolves exact, runtime-compatible official plugin versions during `docker build`, then installs them from npm into the mounted OpenClaw config directory on startup. This preserves the trusted npm provenance required by current OpenClaw releases; normal Docker deployments bind-mount `/home/node/.openclaw`, which would otherwise hide anything installed at build time. The first startup after a plugin version changes requires npm registry access.
 
@@ -38,11 +39,12 @@ docker build \
   -t openclaw-shipyard:latest .
 ```
 
-To update the bundled Himalaya release deliberately:
+To update the bundled Himalaya or GitHub CLI releases deliberately:
 
 ```sh
 docker build \
   --build-arg HIMALAYA_VERSION=2.0.0 \
+  --build-arg GH_VERSION=2.99.0 \
   -t openclaw-shipyard:latest .
 ```
 
@@ -55,6 +57,19 @@ config mount. To use a different location, set `HIMALAYA_CONFIG`:
 ```yaml
 environment:
   HIMALAYA_CONFIG: /home/node/.openclaw/himalaya/config.toml
+```
+
+## GitHub CLI persistence
+
+`gh` reads its configuration (including the OAuth token in `hosts.yml`) from
+`GH_CONFIG_DIR`, which this image sets to `/home/node/.openclaw/gh`, below
+the persisted OpenClaw config mount. Run `gh auth login` once inside the
+container and the login survives recreates and image updates. To use a
+different location, override it:
+
+```yaml
+environment:
+  GH_CONFIG_DIR: /home/node/.openclaw/gh
 ```
 
 Store the Gmail app password in a Docker secret or host-side secret command,

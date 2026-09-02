@@ -8,6 +8,7 @@ FROM ${OPENCLAW_BASE_IMAGE}
 
 ARG OPENCLAW_PLUGIN_NAMES="@openclaw/discord @openclaw/whatsapp"
 ARG HIMALAYA_VERSION=2.0.0
+ARG GH_VERSION=2.99.0
 
 ENV OPENCLAW_BAKED_PLUGIN_PACK_DIR=/opt/openclaw-plugin-packs
 ENV OPENCLAW_INSTALL_BAKED_PLUGINS=1
@@ -33,6 +34,27 @@ RUN set -eux; \
     install -m 0755 /tmp/himalaya /usr/local/bin/himalaya; \
     rm -rf /tmp/himalaya /tmp/himalaya.tgz; \
     himalaya --version
+
+# Pin the GitHub CLI for the same reason as Himalaya: rebuilding must not
+# silently change the tool.
+RUN set -eux; \
+    case "$(dpkg --print-architecture)" in \
+      amd64) gh_target=linux_amd64 ;; \
+      arm64) gh_target=linux_arm64 ;; \
+      *) echo "Unsupported architecture: $(dpkg --print-architecture)" >&2; exit 1 ;; \
+    esac; \
+    curl --fail --location --silent --show-error \
+      "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_${gh_target}.tar.gz" \
+      --output /tmp/gh.tgz; \
+    tar -xzf /tmp/gh.tgz -C /tmp; \
+    install -m 0755 "/tmp/gh_${GH_VERSION}_${gh_target}/bin/gh" /usr/local/bin/gh; \
+    rm -rf /tmp/gh.tgz "/tmp/gh_${GH_VERSION}_${gh_target}"; \
+    gh --version
+
+# Put gh's config (including the OAuth token in hosts.yml) under the standard
+# persisted OpenClaw config mount so auth survives container recreates. A
+# single env var covers both config.yml and hosts.yml, unlike XDG_BASE_HOME.
+ENV GH_CONFIG_DIR=/home/node/.openclaw/gh
 
 USER node
 WORKDIR ${OPENCLAW_BAKED_PLUGIN_PACK_DIR}
