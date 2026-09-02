@@ -6,6 +6,7 @@ set -eu
 : "${OPENCLAW_BAKED_PLUGIN_PACK_DIR:=/opt/openclaw-plugin-packs}"
 : "${OPENCLAW_INSTALL_BAKED_PLUGINS:=1}"
 : "${HIMALAYA_CONFIG:=${OPENCLAW_CONFIG_DIR}/himalaya/config.toml}"
+export HIMALAYA_CONFIG
 
 # The config directory lives under the standard persisted auth/config mount.
 # Credentials are deliberately not baked into the image.
