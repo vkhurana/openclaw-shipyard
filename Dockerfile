@@ -7,6 +7,9 @@ ARG OPENCLAW_BASE_IMAGE=ghcr.io/openclaw/openclaw:latest
 FROM ${OPENCLAW_BASE_IMAGE}
 
 ARG OPENCLAW_PLUGIN_NAMES="@openclaw/discord @openclaw/whatsapp"
+# Bump here if upstream breaks compatibility:
+#   himalaya: https://github.com/pimalaya/himalaya/releases
+#   gh:       https://github.com/cli/cli/releases
 ARG HIMALAYA_VERSION=2.0.0
 ARG GH_VERSION=2.99.0
 
