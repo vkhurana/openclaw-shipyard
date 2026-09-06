@@ -56,6 +56,11 @@ RUN set -eux; \
 # single env var covers both config.yml and hosts.yml, unlike XDG_BASE_HOME.
 ENV GH_CONFIG_DIR=/home/node/.openclaw/gh
 
+# Install the Codex CLI globally and point OpenClaw at it via PATH so the
+# managed-binary resolver is skipped entirely.
+RUN npm install -g @openai/codex@latest
+ENV OPENCLAW_CODEX_APP_SERVER_BIN=codex
+
 USER node
 WORKDIR ${OPENCLAW_BAKED_PLUGIN_PACK_DIR}
 
