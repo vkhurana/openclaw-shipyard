@@ -1,7 +1,7 @@
 # openclaw-shipyard
 
 Custom OpenClaw image based on `ghcr.io/openclaw/openclaw:latest`, with
-compatible Discord and WhatsApp channel plugins baked in.
+compatible Discord, WhatsApp, and GitHub Copilot plugins baked in.
 
 It also includes the pinned [Himalaya](https://github.com/pimalaya/himalaya)
 IMAP/SMTP client (`2.0.0`) and [GitHub CLI](https://cli.github.com/) (`gh`
@@ -35,7 +35,7 @@ To change the baked plugins:
 
 ```sh
 docker build \
-  --build-arg 'OPENCLAW_PLUGIN_NAMES=@openclaw/discord @openclaw/whatsapp' \
+  --build-arg 'OPENCLAW_PLUGIN_NAMES=@openclaw/discord @openclaw/whatsapp @openclaw/copilot' \
   -t openclaw-shipyard:latest .
 ```
 
