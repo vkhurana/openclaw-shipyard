@@ -43,7 +43,50 @@ install_baked_plugins() {
   printf '%s\n' "${checksum}" > "${marker}"
 }
 
+install_copilot_platform_package() {
+  [ -n "${GITHUB_COPILOT_CLI_VERSION:-}" ] || return 0
+
+  case "$(uname -m)" in
+    x86_64) copilot_arch=x64 ;;
+    aarch64|arm64) copilot_arch=arm64 ;;
+    *) return 0 ;;
+  esac
+  if ldd --version 2>&1 | grep -qi musl; then
+    copilot_platform=linuxmusl
+  else
+    copilot_platform=linux
+  fi
+
+  for copilot_dir in "${OPENCLAW_CONFIG_DIR}"/npm/projects/*/node_modules/@openclaw/copilot; do
+    [ -d "${copilot_dir}" ] || continue
+    project_dir="${copilot_dir%/node_modules/@openclaw/copilot}"
+    package_name="@github/copilot-${copilot_platform}-${copilot_arch}"
+    package_dir="${project_dir}/node_modules/${package_name}"
+    sdk_client="${project_dir}/node_modules/@github/copilot-sdk/dist/client.js"
+
+    # Newer SDKs no longer load the legacy platform-package SDK entrypoint.
+    [ -f "${sdk_client}" ] || continue
+    grep -Fq 'packageName}/sdk' "${sdk_client}" || continue
+    if [ -f "${package_dir}/sdk/index.js" ]; then
+      continue
+    fi
+
+    # SDK 1.0.11 requires the platform package's /sdk export, which was
+    # removed in Copilot CLI 1.0.81. Extract the compatible artifact without
+    # changing OpenClaw's managed plugin lockfile or peer links.
+    temp_dir="$(mktemp -d)"
+    npm pack --silent --pack-destination "${temp_dir}" \
+      "${package_name}@${GITHUB_COPILOT_CLI_VERSION}" >/dev/null
+    rm -rf "${package_dir}"
+    mkdir -p "$(dirname "${package_dir}")"
+    tar -xzf "${temp_dir}"/*.tgz -C "${temp_dir}"
+    mv "${temp_dir}/package" "${package_dir}"
+    rm -rf "${temp_dir}"
+  done
+}
+
 install_baked_plugins
+install_copilot_platform_package
 
 cd /app
 exec "$@"

@@ -12,9 +12,11 @@ ARG OPENCLAW_PLUGIN_NAMES="@openclaw/discord @openclaw/whatsapp @openclaw/copilo
 #   gh:       https://github.com/cli/cli/releases
 ARG HIMALAYA_VERSION=2.0.0
 ARG GH_VERSION=2.99.0
+ARG GITHUB_COPILOT_CLI_VERSION=1.0.80
 
 ENV OPENCLAW_BAKED_PLUGIN_PACK_DIR=/opt/openclaw-plugin-packs
 ENV OPENCLAW_INSTALL_BAKED_PLUGINS=1
+ENV GITHUB_COPILOT_CLI_VERSION=${GITHUB_COPILOT_CLI_VERSION}
 
 USER root
 RUN apt-get update \
