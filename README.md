@@ -1,16 +1,12 @@
 # openclaw-shipyard
 
 Custom OpenClaw image based on `ghcr.io/openclaw/openclaw:latest`, with
-compatible Discord, WhatsApp, and GitHub Copilot plugins baked in.
+compatible Discord and WhatsApp channel plugins baked in.
 
 It also includes the pinned [Himalaya](https://github.com/pimalaya/himalaya)
 IMAP/SMTP client (`2.0.0`) and [GitHub CLI](https://cli.github.com/) (`gh`
 `2.99.0`). This makes email tooling and `gh` available after every container
 recreate; their account configuration remains outside the image.
-
-The GitHub Copilot runtime also installs a compatible platform CLI package on
-startup. Its version is pinned with `GITHUB_COPILOT_CLI_VERSION` because newer
-CLI packages are not compatible with the SDK bundled by the plugin.
 
 The image resolves exact, runtime-compatible official plugin versions during `docker build`, then installs them from npm into the mounted OpenClaw config directory on startup. This preserves the trusted npm provenance required by current OpenClaw releases; normal Docker deployments bind-mount `/home/node/.openclaw`, which would otherwise hide anything installed at build time. The first startup after a plugin version changes requires npm registry access.
 
@@ -39,7 +35,7 @@ To change the baked plugins:
 
 ```sh
 docker build \
-  --build-arg 'OPENCLAW_PLUGIN_NAMES=@openclaw/discord @openclaw/whatsapp @openclaw/copilot' \
+  --build-arg 'OPENCLAW_PLUGIN_NAMES=@openclaw/discord @openclaw/whatsapp' \
   -t openclaw-shipyard:latest .
 ```
 
@@ -49,7 +45,6 @@ To update the bundled Himalaya or GitHub CLI releases deliberately:
 docker build \
   --build-arg HIMALAYA_VERSION=2.0.0 \
   --build-arg GH_VERSION=2.99.0 \
-  --build-arg GITHUB_COPILOT_CLI_VERSION=1.0.80 \
   -t openclaw-shipyard:latest .
 ```
 
