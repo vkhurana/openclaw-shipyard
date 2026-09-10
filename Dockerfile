@@ -18,7 +18,7 @@ ENV OPENCLAW_INSTALL_BAKED_PLUGINS=1
 
 USER root
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates curl ripgrep \
+    && apt-get install -y --no-install-recommends ca-certificates curl ripgrep python3-websocket \
     && rm -rf /var/lib/apt/lists/* \
     && install -d -m 0755 -o node -g node "${OPENCLAW_BAKED_PLUGIN_PACK_DIR}"
 
